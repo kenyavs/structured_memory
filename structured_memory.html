@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Memory</title>
+    <link href="css/styles.css" type="text/css" rel="stylesheet"></link>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+    <!--script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script-->
+    <script src="http://underscorejs.org/underscore.js"></script>
+    <script src="http://backbonejs.org/backbone.js"></script>
+    <script src="memory_backbone_3.js"></script>
+  </head>
+  <body>
+    <div id="container" class="container">
+      <h1 class="memory">Memory</h1>
+      <div id="board" class="div-table hide-table"></div>
+      <div id="message-drawer" class="alert-messages hide">
+        <div class="message">
+          <div class="message-inside">
+            <span class="message-text">We gotta check...are you human?</span>
+            <!--a class="dismiss" href="#">×</a-->
+          </div>
+        </div>
+      </div>
+      <div id="username" class="username">
+          <input class="username-input" type="text" name="uname" placeholder="Enter a twitter username"><br>
+          <button id="play"  class="button" type="button">Play!</button>
+      </div>
+      <div id="play-again" class="play-again hide">
+          <button class="button" type="button">Play Again?</button>
+      </div>
+    </div>
+  </body>
+</html>
