@@ -1,7 +1,6 @@
 $(function() {
   Card = Backbone.View.extend({
     initialize: function(){
-      //this.on("flipOff", this.flipOff, this);
       this.options.board.bind('flipOff', this.flipOff, this);
       this.options.board.bind("removeCard", this.removeCard, this);
     },
@@ -12,17 +11,13 @@ $(function() {
       this.$el.removeClass("off");
       this.$el.addClass("on");
       this.options.board.incrementClicks();
-      //this.options.board.recordClick(this.el);
       this.options.board.recordClick(this);
       this.undelegateEvents();
-      //this.off("click");//remove listener temporarily...unless next card click is a match
-      //perhaps more appropriately--->this.off("click", flip)
     },
     //this handler is currently called for every view instance created. how can i only have it be called once?
     flipOff: function(){
       var selectedCards = this.options.board.get("current_clicks");
-      console.log(selectedCards.length);
-      //var selectedCardsLength = this.options.board.current_clicks.length
+
       for(var i = 0; i<selectedCards.length; i++){
         //gray out cell and disable click
         $(selectedCards[i].el).removeClass("on");
@@ -38,12 +33,6 @@ $(function() {
         $(selectedCards[i].el).addClass("removed");
       }
     },
-    /*appendRow: function(){
-      var data = this.options.board.attributes.tweets;
-      var cardNum = this.options.cardNum;
-      var text = data[cardNum]["text"];
-      $(this.options.row).append("<div class='div-cell off'>"+text+"</div>");
-    },*/
     render: function(){
       var data = this.options.board.attributes.tweets;
       var cardNum = this.options.cardNum;
@@ -71,13 +60,14 @@ $(function() {
       if(this.get("click_num")===2){
         this.compareClicks();
         var self = this;
+
+        console.log(self);
         
         function innerFunction(self){
           self.resetClicks();
-          //self.trigger("flipOff");
 
           if(self.get("number_of_matches")===self.get("max_length")){
-            self.get("game_view").askToplayAgain();     
+            self.trigger("askToPlayAgain"); 
           }
         }
 
@@ -92,24 +82,13 @@ $(function() {
         function innerFunction(self){
           self.trigger("removeCard");
         }
-
         setTimeout(function(){innerFunction(self)}, 500);
-        /*setTimeout(function(){
-          removeCard();
-            }, 500);*/
-        
         this.set("number_of_matches", this.get("number_of_matches")+1);
       }
       else{
         var length = this.get("current_clicks").length;
         for(var i = 0; i<length; i++){
-          console.log(this.get("current_clicks")[i]);
-          //console.log(this.get("current_clicks")[i]);
-          //this.get("current_clicks")[i].delegateEvents({"click":"flipOn"});
-          //this.get("cards")[i].delegateEvents({"click" : "flipOn"});
-
           this.get("current_clicks")[i].delegateEvents({"click": "flipOn"});
-          //this.get("cards")[cardNum].delegateEvents({"click": "flipOn"});
         }
         console.log("Welp :/");
       }
@@ -158,8 +137,12 @@ $(function() {
 
   GameView = Backbone.View.extend({
     el: $("#container"),
+    initialize: function(){
+      this.options.board.bind('askToPlayAgain', this.askToPlayAgain, this);
+    },
     events:{
-      "click #board": "triggerCheckGameStatus"
+      "click #board": "triggerCheckGameStatus",
+      "click #play-again .button": "reloadWindow"
     },
     loadData: function(){
       var COL = this.options.board.attributes.col;
@@ -177,15 +160,13 @@ $(function() {
           var newCard = new Card({cardNum:cardNum, row:row, board:this.options.board});
           this.options.board.attributes.cards.push(newCard);
           row.append(newCard.render().el);
-          //newCard.appendRow();
           cardNum++;
         }
       }
     },
     createRow: function(){
-      //$(this.el).append("<div class='div-row'>");//or do i actually want this: $(this.el).append("<div class='div-row'>");<----is appending allowed, even?
       var row = "<div class='div-row'>";
-      $("#board").append(row);//or do i actually want this: $(this.el).append("<div class='div-row'>");<----is appending allowed, even?
+      $("#board").append(row);
     },
     getRowElement: function(){
       return $(".div-row").last();
@@ -194,16 +175,20 @@ $(function() {
       this.options.board.checkGameStatus();
     },
     askToPlayAgain:function(){
-      $("username").addClass("z-index");
-      $("play-again").removeClass("hide");    
+      console.log("did it get here");
+      $("#username").addClass("z-index");
+      $("#play-again").removeClass("hide");    
     },
     render: function(){
       $("#username").addClass("hide");
-      $(this.el).show(); //<----is this correct?
+      //$(this.el).show();
+      return $(this.el);
+    },
+    reloadWindow: function(){
+      window.location.reload();
     }
   });
   
-  //appview = new AppView;
   var searchview  = new SearchView;
 });
 
