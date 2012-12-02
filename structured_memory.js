@@ -16,7 +16,7 @@ $(function() {
     },
     //this handler is currently called for every view instance created. how can i only have it be called once?
     flipOff: function(){
-      var selectedCards = this.options.board.get("current_clicks");
+      var selectedCards = this.options.board.get("selectedCards");
 
       for(var i = 0; i<selectedCards.length; i++){
         //gray out cell and disable click
@@ -25,7 +25,7 @@ $(function() {
       } 
     },
     removeCard: function(){
-      var selectedCards = this.options.board.get("current_clicks");
+      var selectedCards = this.options.board.get("selectedCards");
       
       for(var i = 0; i<selectedCards.length; i++){
         //gray out cell and disable click/remove click event listener 
@@ -44,29 +44,30 @@ $(function() {
     }
   });
 
-  Board = Backbone.Model.extend({   
+  Board = Backbone.Model.extend({  
+    initialize: function(){
+      this.set({"selectedCards":[], "numberOfMatches":0, "clickNum":0, "cards":[]});
+    },
     incrementClicks: function(){
-      this.set("click_num", this.get("click_num")+1);
+      this.set("clickNum", this.get("clickNum")+1);
     },
     recordClick: function(card){
-      this.get("current_clicks").push(card);
+      this.get("selectedCards").push(card);
     },
     resetClicks: function(){
       this.trigger("flipOff");
-      this.set("click_num", 0);
-      this.set("current_clicks", []);
+      this.set("clickNum", 0);
+      this.set("selectedCards", []);
     },
     checkGameStatus: function(){
-      if(this.get("click_num")===2){
+      if(this.get("clickNum")===2){
         this.compareClicks();
         var self = this;
 
-        console.log(self);
-        
         function innerFunction(self){
           self.resetClicks();
 
-          if(self.get("number_of_matches")===self.get("max_length")){
+          if(self.get("numberOfMatches")===self.get("uniqueCards")){
             self.trigger("askToPlayAgain"); 
           }
         }
@@ -75,7 +76,7 @@ $(function() {
       }
     },
     compareClicks: function(){
-      if($(this.get("current_clicks")[0].el).html()===$(this.get("current_clicks")[1].el).html()){
+      if($(this.get("selectedCards")[0].el).html()===$(this.get("selectedCards")[1].el).html()){
         console.log("It's a match!");
         var self = this;
           
@@ -83,12 +84,12 @@ $(function() {
           self.trigger("removeCard");
         }
         setTimeout(function(){innerFunction(self)}, 500);
-        this.set("number_of_matches", this.get("number_of_matches")+1);
+        this.set("numberOfMatches", this.get("numberOfMatches")+1);
       }
       else{
-        var length = this.get("current_clicks").length;
+        var length = this.get("selectedCards").length;
         for(var i = 0; i<length; i++){
-          this.get("current_clicks")[i].delegateEvents({"click": "flipOn"});
+          this.get("selectedCards")[i].delegateEvents({"click": "flipOn"});
         }
         console.log("Welp :/");
       }
@@ -109,8 +110,11 @@ $(function() {
         $("message-text").removeClass("hide");
       }
       else{
+        var uniqueCards = this.getTweets().length/2;
+        var row = 4;
+        var col = 3;
         this.tweets = this.getTweets();//getTweets(username);
-        this.board = new Board({tweets:this.tweets, current_clicks:[], number_of_matches:0, click_num:0, row:4, col:3, max_length:6, cards:[]});
+        this.board = new Board({tweets:this.tweets, row:row, col:col, uniqueCards:uniqueCards});
         this.game_view = new GameView({board: this.board});  
         this.game_view.loadData();
         this.game_view.render();
@@ -175,14 +179,13 @@ $(function() {
       this.options.board.checkGameStatus();
     },
     askToPlayAgain:function(){
-      console.log("did it get here");
       $("#username").addClass("z-index");
       $("#play-again").removeClass("hide");    
     },
     render: function(){
       $("#username").addClass("hide");
       //$(this.el).show();
-      return $(this.el);
+      //return $(this.el);
     },
     reloadWindow: function(){
       window.location.reload();
