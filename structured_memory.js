@@ -1,4 +1,23 @@
 $(function() {
+  JSONPCollection = Backbone.Collection.extend({
+    model: Backbone.Model.extend({}),
+    url: function() { 
+      var username = this.get("username");
+      return 'https://api.twitter.com/1/statuses/user_timeline.json?screen_name='+username+'&count=20';
+    },
+
+    // override backbone synch to force a jsonp call
+    sync: function(method, model, options){  
+      options.timeout = 10000;  
+      options.dataType = "jsonp";  
+      return Backbone.sync(method, model, options); 
+    },
+
+    parse: function(response){
+      return response;
+    },
+  });
+
   Card = Backbone.View.extend({
     initialize: function(){
       this.options.board.bind('flipOff', this.flipOff, this);
@@ -36,9 +55,10 @@ $(function() {
     render: function(){
       var data = this.options.board.attributes.tweets;
       var cardNum = this.options.cardNum;
-      var text = data[cardNum]["text"];
+      this.text = data[cardNum]["text"];
+      var boardCards = this.options.board.attributes.cards;
 
-      this.$el.html(text);
+      this.$el.html(this.text);
       this.$el.addClass('div-cell off');
       return this;
     }
@@ -97,35 +117,31 @@ $(function() {
   });
 
 
-  SearchView = Backbone.View.extend({
+  UsernameView = Backbone.View.extend({
     el: $("#username"),
     events: {
       "click #play":"validateUsername"
     },
     validateUsername: function(){
-      var username = "foodcoachnyc";//e.target;//document.getElementById("username").getElementsByTagName("input")[0].value;
+      var username = $(".username-input").val();
 
       if(username==''){
         $("message-text").html("Must enter username to play.");
         $("message-text").removeClass("hide");
       }
       else{
-        var uniqueCards = this.getTweets().length/2;
-        var row = 4;
-        var col = 3;
-        this.tweets = this.getTweets();//getTweets(username);
-        this.board = new Board({tweets:this.tweets, row:row, col:col, uniqueCards:uniqueCards});
-        this.game_view = new GameView({board: this.board});  
-        this.game_view.loadData();
-        this.game_view.render();
+        var tweets = this.requestTweets(username);
+        this.loadTweets(tweets);
       }
     },
-    getTweets: function(){
-      var tweets = [{text:"Pandora", count:2}, {text:"Facebook", count:2}, {text:"Twitter", count:2}, {text:"Grooveshark", count:2}, {text:"Instagram", count:2}, {text:"Spotify", count:2}];
-      //shuffle returned tweets to avoid only grabbing/and using the first 6 from a user...then duplicate and shuffle again
-      var duplicatedTweets = this.shuffle(tweets.concat(tweets));
-      return duplicatedTweets;
-      //executeAjaxHandler(username);
+    requestTweets: function(username){
+      var jsonp = new JSONPCollection({"username":username});
+      this.model = jsonp;
+      //jsonp.fetch();
+      //var json = jsonp.attributes;
+
+      this.model.bind("all", this.loadTweets, this);
+      this.model.fetch();
     },
     shuffle: function(list){
       var i, j, temp;
@@ -136,6 +152,41 @@ $(function() {
         list[j] = temp;
       }
       return list;
+    },
+    loadTweets: function(){
+      var row = 4;
+      var col = 3;
+      var UNIQUE_CARDS = (row*col)/2;
+      var tweets = [];
+      var txt = '';
+      var i = 0;
+      var self = this;
+
+      this.model.each(function(tweet){
+        txt = tweet.toJSON().text;
+        var obj = {text:txt, matchId:i};
+        
+        //NOT GOOD, HACK FOR ACCOMODATING THE RESULT SET RETURNED BY TWITTER. THE FIRST ENTRY IS THE USERNAME...NOT TWEETS
+        if(i>1){
+          tweets.push(obj);
+        }
+        i++
+      });
+
+      tweets = this.shuffle(tweets);
+      tweets = tweets.slice(0,6);
+      
+      tweets = this.shuffle(tweets.concat(tweets));
+      this.tweets = tweets;
+
+      this.board = new Board({tweets:tweets, row:row, col:col, uniqueCards:UNIQUE_CARDS});
+      this.gameView = new GameView({board: this.board});  
+
+      function innerFunction(self){
+        self.gameView.loadData();
+        self.gameView.hideUsernameBox();
+      }
+      setTimeout(function(){innerFunction(self)}, 200);//race condition here!
     }
   });
 
@@ -145,7 +196,7 @@ $(function() {
       this.options.board.bind('askToPlayAgain', this.askToPlayAgain, this);
     },
     events:{
-      "click #board": "triggerCheckGameStatus",
+      "click #board": "checkGameStatus",
       "click #play-again .button": "reloadWindow"
     },
     loadData: function(){
@@ -161,7 +212,9 @@ $(function() {
         var row = this.getRowElement();
         
         for(var j = 0; j<COL; j++){
-          var newCard = new Card({cardNum:cardNum, row:row, board:this.options.board});
+          var matchId = tweets[cardNum]["matchId"];
+
+          var newCard = new Card({cardNum:cardNum, matchId:matchId, row:row, board:this.options.board});
           this.options.board.attributes.cards.push(newCard);
           row.append(newCard.render().el);
           cardNum++;
@@ -175,25 +228,20 @@ $(function() {
     getRowElement: function(){
       return $(".div-row").last();
     },
-    triggerCheckGameStatus: function(){
+    checkGameStatus: function(){
       this.options.board.checkGameStatus();
     },
     askToPlayAgain:function(){
       $("#username").addClass("z-index");
       $("#play-again").removeClass("hide");    
     },
-    render: function(){
+    hideUsernameBox: function(){
       $("#username").addClass("hide");
-      //$(this.el).show();
-      //return $(this.el);
     },
     reloadWindow: function(){
       window.location.reload();
     }
   });
   
-  var searchview  = new SearchView;
+  var usernameView  = new UsernameView;
 });
-
-
-//the model triggers and the view does something like this.model.on
