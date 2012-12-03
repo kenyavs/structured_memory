@@ -25,7 +25,7 @@ $(function() {
     events:{
       "click": "flipOn"
     },
-    initialize: function(){
+    initialize: function(options){
       this.options.board.bind('flipOff', this.flipOff, this);
       this.options.board.bind("removeCard", this.removeCard, this);
     },
@@ -58,10 +58,10 @@ $(function() {
     render: function(){
       var data = this.options.board.attributes.tweets;
       var cardNum = this.options.cardNum;
-      this.text = data[cardNum]["text"];
+      //this.text = data[cardNum]["text"];
       var boardCards = this.options.board.attributes.cards;
 
-      this.$el.html(this.text);
+      this.$el.html(this.options.text);
       this.$el.addClass('div-cell off');
       return this;
     }
@@ -99,7 +99,7 @@ $(function() {
       }
     },
     compareClicks: function(){
-      if($(this.get("selectedCards")[0].el).html()===$(this.get("selectedCards")[1].el).html()){
+      if(this.get("selectedCards")[0].options.matchId===this.get("selectedCards")[1].options.matchId){
         console.log("It's a match!");
         var self = this;
           
@@ -128,10 +128,8 @@ $(function() {
     validateUsername: function(){
       var username = $(".username-input").val();
 
-      if(username===''){
-        //move to error message class
-        $(".message-text").html("Must enter username to play.");
-        $("#message-drawer").removeClass("hide");
+      if(!username){
+        var error = new Error("Must enter username to play.");
       }
       else{
         $("#message-drawer").addClass("hide");
@@ -176,10 +174,9 @@ $(function() {
         i++
       });
 
-      //move to error message class...also, must fix race condition
+      //must fix race condition!
       /*if(tweets.length<UNIQUE_CARDS){
-        $(".message-text").html("Bummer, not enough tweets to play. Choose another username.");
-        $("#message-drawer").removeClass("hide");
+        var error = new Error("Bummer, not enough tweets to play. Choose another username");
       }*/
 
       tweets = this.shuffle(tweets);
@@ -222,8 +219,9 @@ $(function() {
         
         for(var j = 0; j<COL; j++){
           var matchId = tweets[cardNum]["matchId"];
+          var text = tweets[cardNum]["text"];
 
-          var newCard = new Card({cardNum:cardNum, matchId:matchId, row:row, board:this.options.board});
+          var newCard = new Card({cardNum:cardNum, matchId:matchId, text:text, row:row, board:this.options.board});
           this.options.board.attributes.cards.push(newCard);
           row.append(newCard.render().el);
           cardNum++;
@@ -251,6 +249,11 @@ $(function() {
       window.location.reload();
     }
   });
+
+var Error = function(msg){
+  $(".message-text").html(msg);
+  $("#message-drawer").removeClass("hide");
+}
   
   var usernameView  = new UsernameView;
 });
