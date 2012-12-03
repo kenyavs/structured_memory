@@ -2,7 +2,8 @@ $(function() {
   JSONPCollection = Backbone.Collection.extend({
     model: Backbone.Model.extend({}),
     initialize: function(options){
-      this.username = options.username
+      this.username = options.username;
+
     },
     url: function() { 
       var username = this.username;
@@ -56,8 +57,8 @@ $(function() {
       }
     },
     render: function(){
-      var data = this.options.board.attributes.tweets;
-      var cardNum = this.options.cardNum;
+      //var data = this.options.board.attributes.tweets;
+      //var cardNum = this.options.cardNum;
       //this.text = data[cardNum]["text"];
       var boardCards = this.options.board.attributes.cards;
 
@@ -78,7 +79,7 @@ $(function() {
       this.get("selectedCards").push(card);
     },
     resetClicks: function(){
-      this.trigger("flipOff");
+      this.trigger("flipOff");//      this.trigger("flipOff", selectedCards);
       this.set("clickNum", 0);
       this.set("selectedCards", []);
     },
@@ -87,7 +88,7 @@ $(function() {
         this.compareClicks();
         var self = this;
 
-        function innerFunction(self){
+        function innerFunction(){
           self.resetClicks();
 
           if(self.get("numberOfMatches")===self.get("uniqueCards")){
@@ -95,7 +96,7 @@ $(function() {
           }
         }
 
-        setTimeout(function(){innerFunction(self)}, 500);
+        setTimeout(function(){innerFunction()}, 500);
       }
     },
     compareClicks: function(){
@@ -134,14 +135,13 @@ $(function() {
       else{
         $("#message-drawer").addClass("hide");
         var tweets = this.requestTweets(username);
-        this.dupeTweets(tweets);
       }
     },
     requestTweets: function(username){
       var jsonp = new JSONPCollection({username:username});
       this.model = jsonp;
 
-      this.model.bind("all", this.dupeTweets, this);
+      this.model.bind("reset", this.dupeTweets, this);
       this.model.fetch();
     },
     shuffle: function(list){
@@ -164,20 +164,15 @@ $(function() {
       var self = this;
 
       this.model.each(function(tweet){
-        txt = tweet.toJSON().text;
-        var obj = {text:txt, matchId:i};
-        
-        //NOT GOOD, HACK FOR ACCOMODATING THE RESULT SET RETURNED BY TWITTER. THE FIRST ENTRY IS THE USERNAME...NOT TWEETS
-        if(i>1){
-          tweets.push(obj);
-        }
-        i++
+        txt = tweet.toJSON().text;//TODO: change to get("text")
+        var obj = {text:txt, matchId:i}; //change i. i should be able to get somehting for the each loop(index or something)
+        tweets.push(obj);
+        i++;
       });
 
-      //must fix race condition!
-      /*if(tweets.length<UNIQUE_CARDS){
+      if(tweets.length<UNIQUE_CARDS){
         var error = new Error("Bummer, not enough tweets to play. Choose another username");
-      }*/
+      }
 
       tweets = this.shuffle(tweets);
       tweets = tweets.slice(0,UNIQUE_CARDS);
@@ -187,12 +182,8 @@ $(function() {
 
       this.board = new Board({tweets:tweets, row:row, col:col, uniqueCards:UNIQUE_CARDS});
       this.gameView = new GameView({board: this.board});  
-
-      function innerFunction(self){
-        self.gameView.loadTweets();
-        self.gameView.hideUsernameBox();
-      }
-      setTimeout(function(){innerFunction(self)}, 450);//race condition here!
+      self.gameView.loadTweets();
+      self.gameView.hideUsernameBox();
     }
   });
 
@@ -210,7 +201,6 @@ $(function() {
       var ROW = this.options.board.attributes.row;
       var cardNum = 0;    
       var tweets = this.options.board.attributes.tweets;
-
 
       for(var i = 0; i<ROW; i++){
         this.createRow();
