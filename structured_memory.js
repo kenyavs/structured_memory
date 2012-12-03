@@ -1,8 +1,11 @@
 $(function() {
   JSONPCollection = Backbone.Collection.extend({
     model: Backbone.Model.extend({}),
+    initialize: function(options){
+      this.username = options.username
+    },
     url: function() { 
-      var username = this.get("username");
+      var username = this.username;
       return 'https://api.twitter.com/1/statuses/user_timeline.json?screen_name='+username+'&count=20';
     },
 
@@ -19,12 +22,12 @@ $(function() {
   });
 
   Card = Backbone.View.extend({
+    events:{
+      "click": "flipOn"
+    },
     initialize: function(){
       this.options.board.bind('flipOff', this.flipOff, this);
       this.options.board.bind("removeCard", this.removeCard, this);
-    },
-    events:{
-      "click": "flipOn"
     },
     flipOn: function(){
       this.$el.removeClass("off");
@@ -120,27 +123,27 @@ $(function() {
   UsernameView = Backbone.View.extend({
     el: $("#username"),
     events: {
-      "click #play":"validateUsername"
+      "click #username .button":"validateUsername"
     },
     validateUsername: function(){
       var username = $(".username-input").val();
 
-      if(username==''){
-        $("message-text").html("Must enter username to play.");
-        $("message-text").removeClass("hide");
+      if(username===''){
+        //move to error message class
+        $(".message-text").html("Must enter username to play.");
+        $("#message-drawer").removeClass("hide");
       }
       else{
+        $("#message-drawer").addClass("hide");
         var tweets = this.requestTweets(username);
-        this.loadTweets(tweets);
+        this.dupeTweets(tweets);
       }
     },
     requestTweets: function(username){
-      var jsonp = new JSONPCollection({"username":username});
+      var jsonp = new JSONPCollection({username:username});
       this.model = jsonp;
-      //jsonp.fetch();
-      //var json = jsonp.attributes;
 
-      this.model.bind("all", this.loadTweets, this);
+      this.model.bind("all", this.dupeTweets, this);
       this.model.fetch();
     },
     shuffle: function(list){
@@ -153,7 +156,7 @@ $(function() {
       }
       return list;
     },
-    loadTweets: function(){
+    dupeTweets: function(){
       var row = 4;
       var col = 3;
       var UNIQUE_CARDS = (row*col)/2;
@@ -173,8 +176,14 @@ $(function() {
         i++
       });
 
+      //move to error message class...also, must fix race condition
+      /*if(tweets.length<UNIQUE_CARDS){
+        $(".message-text").html("Bummer, not enough tweets to play. Choose another username.");
+        $("#message-drawer").removeClass("hide");
+      }*/
+
       tweets = this.shuffle(tweets);
-      tweets = tweets.slice(0,6);
+      tweets = tweets.slice(0,UNIQUE_CARDS);
       
       tweets = this.shuffle(tweets.concat(tweets));
       this.tweets = tweets;
@@ -183,10 +192,10 @@ $(function() {
       this.gameView = new GameView({board: this.board});  
 
       function innerFunction(self){
-        self.gameView.loadData();
+        self.gameView.loadTweets();
         self.gameView.hideUsernameBox();
       }
-      setTimeout(function(){innerFunction(self)}, 200);//race condition here!
+      setTimeout(function(){innerFunction(self)}, 450);//race condition here!
     }
   });
 
@@ -199,7 +208,7 @@ $(function() {
       "click #board": "checkGameStatus",
       "click #play-again .button": "reloadWindow"
     },
-    loadData: function(){
+    loadTweets: function(){
       var COL = this.options.board.attributes.col;
       var ROW = this.options.board.attributes.row;
       var cardNum = 0;    
