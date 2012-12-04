@@ -57,9 +57,6 @@ $(function() {
       }
     },
     render: function(){
-      //var data = this.options.board.attributes.tweets;
-      //var cardNum = this.options.cardNum;
-      //this.text = data[cardNum]["text"];
       var boardCards = this.options.board.attributes.cards;
 
       this.$el.html(this.options.text);
@@ -160,12 +157,11 @@ $(function() {
       var UNIQUE_CARDS = (row*col)/2;
       var tweets = [];
       var txt = '';
-      var i = 0;
       var self = this;
 
-      this.model.each(function(tweet){
-        txt = tweet.toJSON().text;//TODO: change to get("text")
-        var obj = {text:txt, matchId:i}; //change i. i should be able to get somehting for the each loop(index or something)
+      this.model.each(function(tweet, index){
+        txt = tweet.get("text");
+        var obj = {text:txt, matchId:index};
         tweets.push(obj);
         i++;
       });
