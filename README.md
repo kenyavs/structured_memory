@@ -5,5 +5,5 @@ tweet. cocentrate. remember.
 <b>Usage</b><br>
 In the inner memory dirctory, load memory.html within a browser. Like so: file:///yourpathtomemorydirectory/memory/memory.html
 
-![Bilby Stampede](https://github.com/kenyavs/structured_memory/blob/master/images/memory.png)
+![alt text](https://github.com/kenyavs/structured_memory/blob/master/images/memory.png "Title")
 
