@@ -2,7 +2,7 @@ structured memory - a game, much like the child hood game that tests your concen
 
 tweet. cocentrate. remember.
 
-<b>Usage</b>
+<b>Usage</b><br>
 In the inner memory dirctory, load memory.html within a browser. Like so: file:///yourpathtomemorydirectory/memory/memory.html
 
 
