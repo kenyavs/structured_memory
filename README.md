@@ -2,3 +2,5 @@ structured memory - a game, much like the child hood game that tests your concen
 
 tweet. cocentrate. remember.
 
+<b>Usage</b>
+
