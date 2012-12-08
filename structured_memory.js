@@ -1,25 +1,43 @@
 $(function() {
-  JSONPCollection = Backbone.Collection.extend({
+  TweetCollection = Backbone.Collection.extend({
     model: Backbone.Model.extend({}),
     initialize: function(options){
       this.username = options.username;
-
+      this.tweets = options.tweets;
     },
     url: function() { 
       var username = this.username;
       return 'https://api.twitter.com/1/statuses/user_timeline.json?screen_name='+username+'&count=20';
     },
-
-    // override backbone synch to force a jsonp call
+    // override backbone sync to force a jsonp call
     sync: function(method, model, options){  
       options.timeout = 10000;  
       options.dataType = "jsonp";  
       return Backbone.sync(method, model, options); 
     },
-
     parse: function(response){
+      var row = 4;
+      var col = 3;
+      var UNIQUE_CARDS = (row*col)/2;
+    
+      response = this.shuffle(response);
+      response = response.slice(0,UNIQUE_CARDS);
+      response = this.shuffle(response.concat(response));
+
+      console.log(response);
+
       return response;
     },
+    shuffle: function(list){
+      var i, j, temp;
+      for (i = list.length - 1; i > 0; i--) {
+        j = Math.floor(Math.random()*i);
+        temp = list[i];
+        list[i] = list[j];
+        list[j] = temp;
+      }
+      return list;
+    }
   });
 
   Card = Backbone.View.extend({
@@ -41,6 +59,7 @@ $(function() {
     flipOff: function(){
       var selectedCards = this.options.board.get("selectedCards");
 
+      //TODO: switch out for loops for each where appropriate.
       for(var i = 0; i<selectedCards.length; i++){
         //gray out cell and disable click
         $(selectedCards[i].el).removeClass("on");
@@ -76,7 +95,7 @@ $(function() {
       this.get("selectedCards").push(card);
     },
     resetClicks: function(){
-      this.trigger("flipOff");//      this.trigger("flipOff", selectedCards);
+      this.trigger("flipOff");//DISCUSS: it seems like the trouble here is the events triggers on every single card instance...irrespective of what's passed to the [*args]
       this.set("clickNum", 0);
       this.set("selectedCards", []);
     },
@@ -127,7 +146,7 @@ $(function() {
       var username = $(".username-input").val();
 
       if(!username){
-        var error = new Error("Must enter username to play.");
+        Error("Must enter username to play.");
       }
       else{
         $("#message-drawer").addClass("hide");
@@ -135,51 +154,37 @@ $(function() {
       }
     },
     requestTweets: function(username){
-      var jsonp = new JSONPCollection({username:username});
-      this.model = jsonp;
+      this.tweetCollection = new TweetCollection({username:username});
 
-      this.model.bind("reset", this.dupeTweets, this);
-      this.model.fetch();
+      this.tweetCollection.bind("reset", this.createGameViewAndBoard, this);
+      this.tweetCollection.fetch();
     },
-    shuffle: function(list){
-      var i, j, temp;
-      for (i = list.length - 1; i > 0; i--) {
-        j = Math.floor(Math.random()*i);
-        temp = list[i];
-        list[i] = list[j];
-        list[j] = temp;
-      }
-      return list;
-    },
-    dupeTweets: function(){
+    createGameViewAndBoard: function(){
+      console.log("in create");
+      console.log(this.tweetCollection);
       var row = 4;
       var col = 3;
       var UNIQUE_CARDS = (row*col)/2;
       var tweets = [];
       var txt = '';
-      var self = this;
 
-      this.model.each(function(tweet, index){
+      //QUESTION: is it a good idea to traverse the collection instance within the view after all other manipulation has been performed?
+      this.tweetCollection.each(function(tweet, index){
         txt = tweet.get("text");
         var obj = {text:txt, matchId:index};
         tweets.push(obj);
-        i++;
       });
 
-      if(tweets.length<UNIQUE_CARDS){
+      this.tweets = tweets;
+
+      if(this.tweets.length<UNIQUE_CARDS){
         var error = new Error("Bummer, not enough tweets to play. Choose another username");
       }
 
-      tweets = this.shuffle(tweets);
-      tweets = tweets.slice(0,UNIQUE_CARDS);
-      
-      tweets = this.shuffle(tweets.concat(tweets));
-      this.tweets = tweets;
-
-      this.board = new Board({tweets:tweets, row:row, col:col, uniqueCards:UNIQUE_CARDS});
+      this.board = new Board({tweets:this.tweets, row:row, col:col, uniqueCards:UNIQUE_CARDS});
       this.gameView = new GameView({board: this.board});  
-      self.gameView.loadTweets();
-      self.gameView.hideUsernameBox();
+      this.gameView.loadTweets();
+      this.gameView.hideUsernameBox();
     }
   });
 
