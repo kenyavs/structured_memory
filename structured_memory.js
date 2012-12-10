@@ -18,22 +18,12 @@ $(function() {
     parse: function(response){
       var UNIQUE_CARDS = (this.rows*this.cols)/2;
     
-      response = this.shuffle(response);
+      response = _.shuffle(response);
       response = response.slice(0,UNIQUE_CARDS);
-      response = this.shuffle(response.concat(response));
+      response = _.shuffle(response.concat(response));
 
       return response;
     },
-    shuffle: function(list){
-      var i, j, temp;
-      for (i = list.length - 1; i > 0; i--) {
-        j = Math.floor(Math.random()*i);
-        temp = list[i];
-        list[i] = list[j];
-        list[j] = temp;
-      }
-      return list;
-    }
   });
 
   Card = Backbone.View.extend({
