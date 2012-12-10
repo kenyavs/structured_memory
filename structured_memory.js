@@ -22,8 +22,6 @@ $(function() {
       response = response.slice(0,UNIQUE_CARDS);
       response = this.shuffle(response.concat(response));
 
-      console.log(response);
-
       return response;
     },
     shuffle: function(list){
@@ -115,7 +113,6 @@ $(function() {
     },
     compareClicks: function(){
       if(this.get("selectedCards")[0].options.matchId===this.get("selectedCards")[1].options.matchId){
-        console.log("It's a match!");
         var self = this;
           
         function innerFunction(self){
@@ -129,7 +126,6 @@ $(function() {
         for(var i = 0; i<length; i++){
           this.get("selectedCards")[i].delegateEvents({"click": "flipOn"});
         }
-        console.log("Welp :/");
       }
     }
   });
@@ -158,8 +154,6 @@ $(function() {
       this.tweetCollection.fetch();
     },
     createGameViewAndBoard: function(){
-      console.log("in create");
-      console.log(this.tweetCollection);
       var row = 4;
       var col = 3;
       var UNIQUE_CARDS = (row*col)/2;
