@@ -4,6 +4,8 @@ $(function() {
     initialize: function(options){
       this.username = options.username;
       this.tweets = options.tweets;
+      this.rows = options.rows || 3;
+      this.cols = options.cols || 4;
     },
     url: function() { 
       var username = this.username;
@@ -16,9 +18,7 @@ $(function() {
       return Backbone.sync(method, model, options); 
     },
     parse: function(response){
-      var row = 4;
-      var col = 3;
-      var UNIQUE_CARDS = (row*col)/2;
+      var UNIQUE_CARDS = (this.rows*this.cols)/2;
     
       response = this.shuffle(response);
       response = response.slice(0,UNIQUE_CARDS);
