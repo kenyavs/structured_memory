@@ -20,6 +20,9 @@ $(function() {
 
       response = _.shuffle(response);
       response = response.slice(0,UNIQUE_CARDS);
+      response = response.map(function(r, idx) {
+        r['matchId'] = idx;
+      }, response);
       response = _.shuffle(response.concat(response));
 
       return response;
@@ -144,26 +147,7 @@ $(function() {
       this.tweetCollection.fetch();
     },
     createGameViewAndBoard: function(){
-      var row = 4;
-      var col = 3;
-      var UNIQUE_CARDS = (row*col)/2;
-      var tweets = [];
-      var txt = '';
-
-      //QUESTION: is it a good idea to traverse the collection instance within the view after all other manipulation has been performed?
-      this.tweetCollection.each(function(tweet, index){
-        txt = tweet.get("text");
-        var obj = {text:txt, matchId:index};
-        tweets.push(obj);
-      });
-
-      this.tweets = tweets;
-
-      if(this.tweets.length<UNIQUE_CARDS){
-        var error = new Error("Bummer, not enough tweets to play. Choose another username");
-      }
-
-      this.board = new Board({tweets:this.tweets, row:row, col:col, uniqueCards:UNIQUE_CARDS});
+      this.board = new Board({tweets:this.tweetsCollection, row:row, col:col, uniqueCards:UNIQUE_CARDS});
       this.gameView = new GameView({board: this.board});  
       this.gameView.loadTweets();
       this.gameView.hideUsernameBox();
