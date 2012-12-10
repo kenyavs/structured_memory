@@ -1,6 +1,5 @@
 $(function() {
   TweetCollection = Backbone.Collection.extend({
-    model: Backbone.Model.extend({}),
     initialize: function(options){
       this.username = options.username;
       this.tweets = options.tweets;
