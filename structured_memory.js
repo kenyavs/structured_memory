@@ -17,7 +17,7 @@ $(function() {
     },
     parse: function(response){
       var UNIQUE_CARDS = (this.rows*this.cols)/2;
-    
+
       response = _.shuffle(response);
       response = response.slice(0,UNIQUE_CARDS);
       response = _.shuffle(response.concat(response));
@@ -27,14 +27,14 @@ $(function() {
   });
 
   Card = Backbone.View.extend({
-    events:{
+    events: {
       "click": "flipOn"
     },
-    initialize: function(options){
+    initialize: function(options) {
       this.options.board.bind('flipOff', this.flipOff, this);
       this.options.board.bind("removeCard", this.removeCard, this);
     },
-    flipOn: function(){
+    flipOn: function() {
       this.$el.removeClass("off");
       this.$el.addClass("on");
       this.options.board.incrementClicks();
@@ -42,7 +42,7 @@ $(function() {
       this.undelegateEvents();
     },
     //this handler is currently called for every view instance created. how can i only have it be called once?
-    flipOff: function(){
+    flipOff: function() {
       var selectedCards = this.options.board.get("selectedCards");
 
       //TODO: switch out for loops for each where appropriate.
@@ -52,7 +52,7 @@ $(function() {
         $(selectedCards[i].el).addClass("off");
       } 
     },
-    removeCard: function(){
+    removeCard: function() {
       var selectedCards = this.options.board.get("selectedCards");
       
       for(var i = 0; i<selectedCards.length; i++){
@@ -61,7 +61,7 @@ $(function() {
         $(selectedCards[i].el).addClass("removed");
       }
     },
-    render: function(){
+    render: function() {
       var boardCards = this.options.board.attributes.cards;
 
       this.$el.html(this.options.text);
