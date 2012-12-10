@@ -133,7 +133,7 @@ $(function() {
       var username = $(".username-input").val();
 
       if(!username){
-        Error("Must enter username to play.");
+        displayError("Must enter username to play.");
       }
       else{
         $("#message-drawer").addClass("hide");
@@ -207,7 +207,7 @@ $(function() {
     }
   });
 
-var Error = function(msg){
+var displayError = function(msg){
   $(".message-text").html(msg);
   $("#message-drawer").removeClass("hide");
 }
