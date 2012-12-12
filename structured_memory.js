@@ -21,7 +21,10 @@ $(function() {
       response = _.shuffle(response);
       response = response.slice(0,UNIQUE_CARDS);
       response = response.map(function(r, idx) {
-        r['matchId'] = idx;
+        var obj = {};
+        obj['matchId'] = idx;
+        obj['text'] = r['text'];
+        return obj;
       }, response);
       response = _.shuffle(response.concat(response));
 
