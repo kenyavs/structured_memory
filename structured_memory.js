@@ -117,7 +117,6 @@ $(function() {
     }
   });
 
-
   UsernameView = Backbone.View.extend({
     el: $("#username"),
     events: {
